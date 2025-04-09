@@ -33,7 +33,7 @@ function getRecipientPublicKey() {
  * @returns {string} 中继服务器URL
  */
 function getRelayUrl() {
-  return process.env.RELAY_URL || 'https://dev-relay.dephy.dev';
+  return process.env.RELAY_URL || 'https://dev-relay.dephy.dev/';
 }
 
 /**
