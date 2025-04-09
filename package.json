@@ -1,0 +1,31 @@
+{
+  "name": "dephy-messaging-project",
+  "version": "1.0.0",
+  "description": "DePHY消息层集成示例项目",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "publish": "node src/publish.js",
+    "subscribe": "node src/subscribe.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "dephy",
+    "nostr",
+    "messaging",
+    "decentralized",
+    "web3"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@noble/hashes": "^1.3.2",
+    "dotenv": "^16.3.1",
+    "nostr-tools": "^2.1.3",
+    "websocket-polyfill": "^0.0.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
