@@ -1,4 +1,4 @@
-import { Relay } from 'nostr-tools/relay';
+import { Relay } from 'nostr-tools';
 import 'websocket-polyfill';
 import * as utils from './utils.js';
 
@@ -9,99 +9,102 @@ import * as utils from './utils.js';
  * @param {string} options.recipient 接收者公钥，默认使用配置的接收者
  * @param {number} options.since 从何时开始接收消息，默认为当前时间
  * @param {string} options.subject 订阅特定主题，默认为所有主题
- * @returns {Object} 包含断开连接方法的对象
+ * @returns {Promise<Object>} 包含断开连接方法的对象
  */
 async function subscribeMessages(onMessageCallback, options = {}) {
-  // 获取配置
   const recipient = options.recipient || utils.getRecipientPublicKey();
   const relayUrl = utils.getRelayUrl();
   const since = options.since || Math.floor(Date.now() / 1000);
-  
+
   console.log(`开始监听中继服务器: ${relayUrl}`);
   console.log(`接收者: ${recipient}`);
   console.log(`从时间: ${new Date(since * 1000).toLocaleString()}`);
-  
+
+  let relay;
+
   try {
-    // 初始化中继连接
-    const relay = await Relay.connect(relayUrl);
+    // Initialize relay
+    relay = new Relay(relayUrl);
+
+    // Wait for the connection to open
+    await relay.connect();
+
     console.log(`已连接到 ${relay.url}`);
-    
-    // 构建过滤器
+
+    // Build filter
     const filter = {
-      kinds: [1573], // DePHY 消息层指定的类型
-      since: since,
-      "#p": [recipient], // 订阅特定接收者的消息
+      kinds: [1573], // DePHY message kind
+      since,
+      "#p": [recipient],
     };
-    
-    // 如果指定了主题，则过滤主题
+
     if (options.subject) {
       filter["#s"] = [options.subject];
       console.log(`仅订阅主题: ${options.subject}`);
     }
-    
-    // 订阅消息
-    const sub = relay.sub([filter]);
-    
-    sub.on('event', async (event) => {
-      try {
-        console.log('收到新消息:', {
-          id: event.id,
-          pubkey: event.pubkey,
-          created_at: new Date(event.created_at * 1000).toLocaleString(),
-          tags: event.tags
-        });
-        
-        // 解析消息内容
-        let parsedContent;
+
+    // Create subscription
+    const sub = relay.subscribe([filter], {
+      onevent: async (event) => {
         try {
-          parsedContent = JSON.parse(event.content);
-        } catch (e) {
-          parsedContent = event.content;
+          console.log('收到新消息:', {
+            id: event.id,
+            pubkey: event.pubkey,
+            created_at: new Date(event.created_at * 1000).toLocaleString(),
+            tags: event.tags,
+          });
+
+          // Parse message content
+          let parsedContent;
+          try {
+            parsedContent = JSON.parse(event.content);
+          } catch (e) {
+            parsedContent = event.content;
+          }
+
+          // Call callback
+          if (typeof onMessageCallback === 'function') {
+            onMessageCallback(event, parsedContent);
+          }
+        } catch (error) {
+          console.error('处理消息时出错:', error);
         }
-        
-        // 调用回调函数
-        if (typeof onMessageCallback === 'function') {
-          onMessageCallback(event, parsedContent);
-        }
-      } catch (error) {
-        console.error('处理消息时出错:', error);
-      }
+      },
+      oneose: () => {
+        console.log('EOSE: 存储的事件传输完毕，开始接收实时事件');
+      },
     });
-    
-    sub.on('eose', () => {
-      console.log('EOSE: 存储的事件传输完毕，开始接收实时事件');
-    });
-    
-    // 返回包含断开连接方法的对象
+
+    // Return disconnect method
     return {
       disconnect: () => {
-        sub.unsub();
-        relay.close();
+        sub.close(); // Close the subscription
+        relay.close(); // Close the relay connection
         console.log('已断开连接');
-      }
+      },
     };
   } catch (error) {
     console.error('订阅消息时出错:', error);
+    if (relay) relay.close();
     throw error;
   }
 }
 
-// 如果直接运行此文件，启动测试订阅
+// Test subscription if run directly
 if (import.meta.url === `file://${process.argv[1]}`) {
   subscribeMessages((event, content) => {
     console.log('收到消息内容:', content);
   })
-    .then(subscription => {
+    .then((subscription) => {
       console.log('订阅已启动，按 Ctrl+C 停止...');
-      
-      // 添加进程退出处理
+
       process.on('SIGINT', () => {
         console.log('正在断开连接...');
         subscription.disconnect();
         process.exit(0);
       });
     })
-    .catch(error => {
+    .catch((error) => {
       console.error('订阅出错:', error);
       process.exit(1);
     });

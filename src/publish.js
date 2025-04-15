@@ -1,4 +1,5 @@
-import { finalizeEvent } from 'nostr-tools/pure';
+import { finalizeEvent } from 'nostr-tools';
+import 'websocket-polyfill';
 import * as utils from './utils.js';
 
 /**
@@ -18,28 +19,28 @@ async function publishMessage(content, subject = '0') {
     ? content 
     : JSON.stringify(content);
   
-  // 创建事件
-  const event = finalizeEvent({
-    kind: 1573, // DePHY 消息层指定的类型
-    created_at: Math.floor(Date.now() / 1000),
-    tags: [
-      ["s", subject], // 主题标识符
-      ["p", recipient] // 接收者公钥
-    ],
-    content: contentStr,
-  }, senderSecretKey);
-  
-  console.log('准备发送消息:', {
-    id: event.id,
-    pubkey: event.pubkey,
-    recipient: recipient,
-    subject: subject,
-    content: contentStr.length > 100 ? contentStr.substring(0, 100) + '...' : contentStr
-  });
-  
   try {
-    // 发布消息
-    const response = await fetch(`${relayUrl}/events`, {
+    // 创建事件
+    const event = finalizeEvent({
+      kind: 1573, // DePHY 消息层指定的类型
+      created_at: Math.floor(Date.now() / 1000),
+      tags: [
+        ["s", subject], // 主题标识符
+        ["p", recipient] // 接收者公钥
+      ],
+      content: contentStr,
+    }, senderSecretKey);
+    
+    console.log('准备发送消息:', {
+      id: event.id,
+      pubkey: event.pubkey,
+      recipient: recipient,
+      subject: subject,
+      content: contentStr.length > 100 ? contentStr.substring(0, 100) + '...' : contentStr
+    });
+    
+    // 使用HTTP API发送事件 (HTTP方式可能更可靠)
+    const response = await fetch(`${relayUrl.replace('wss://', 'https://')}/events`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
