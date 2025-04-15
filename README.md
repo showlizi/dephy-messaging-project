@@ -1,3 +1,51 @@
+# DePHY Messaging Layer Integration Example
+
+This is a sample project demonstrating message publishing and subscription using the DePHY messaging layer. The DePHY messaging layer is a decentralized communication network based on the NoStr protocol, designed for communication between devices and software.
+
+## Features
+
+- Decentralized federated network based on the NoStr protocol
+- Acts as a message queue, supporting the publish/subscribe programming model
+- Designed specifically for decentralized device and software communication
+- Supports Web3-friendly billing and metering
+- Provides an HTTP API for easy message sending
+
+## Project Structure
+dephy-messaging-project/
+├── .env # Configuration file (keys and URLs)
+├── package.json # Project information and dependencies
+├── README.md # Project description
+└── src/
+├── index.js # Main application entry point
+├── publish.js # Message publishing module
+├── subscribe.js # Message subscription module
+└── utils.js # Common utility functions
+
+## Installation
+
+```bash
+# Clone the project
+git clone <repository-url> dephy-messaging-project
+cd dephy-messaging-project
+
+# Install dependencies
+pnpm install
+
+# Sender's private key (optional, will be auto-generated if not provided)
+SENDER_SECRET_KEY=your_secret_key_hex
+
+# Recipient's public key
+RECIPIENT_PUBLIC_KEY=recipient_public_key_hex
+
+# Relay server URL
+RELAY_URL=https://dev-relay.dephy.dev
+
+Usage
+Run the Example Application
+
+node src/publish.js
+
+
 # DePHY 消息层集成示例
 
 这是一个基于DePHY消息层的消息发布与订阅示例项目。DePHY消息层是一个基于NoStr协议的去中心化通信网络，用于设备和软件之间的通信。
