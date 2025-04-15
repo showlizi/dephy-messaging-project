@@ -32,7 +32,7 @@ git clone <repository-url> dephy-messaging-project
 cd dephy-messaging-project
 
 # 安装依赖
-npm install
+pnpm install
 ```
 
 ## 配置
